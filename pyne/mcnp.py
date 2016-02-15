@@ -19,7 +19,7 @@ import os
 import linecache
 import datetime
 from warnings import warn
-
+from fortranformat import FortranRecordReader
 import numpy as np
 import tables
 
@@ -61,7 +61,13 @@ class Mctal(object):
         self.f = open(filename, 'r')
 
         # get code name, version, date/time, etc
-        words = self.f.readline().split()
+        # using fortran format
+        
+        words = self.f.readline()
+        # specify fortran format for code name, version,date/time, etc
+        ff=FortranRecordReader()
+        words=ff.read(words)
+
         self.code_name = words[0]
         self.code_version = words[1]
         self.code_date = words[2]
@@ -74,7 +80,10 @@ class Mctal(object):
         self.comment = self.f.readline().strip()
 
         # read tally line
-        words = self.f.readline().split()
+        words = self.f.readline()
+        # specify fortran format for tally line
+        ff=FortranRecordReader()
+        words=ff.read(words)
         self.n_tallies = words[1]
         if len(words) > 2:
             # perturbation tallies present
@@ -88,7 +97,10 @@ class Mctal(object):
             pass
 
         # read kcode information
-        words = self.f.readline().split()
+        # specify fortran format for kcode info
+        words = self.f.readline()
+        ff=FortranRecordReader()
+        words=ff.read(words)
         self.n_cycles = int(words[1])
         self.n_inactive = int(words[2])
         vars_per_cycle = int(words[3])
