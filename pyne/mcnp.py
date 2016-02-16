@@ -65,7 +65,7 @@ class Mctal(object):
         
         words = self.f.readline()
         # specify fortran format for code name, version,date/time, etc
-        ff=FortranRecordReader()
+        ff=FortranRecordReader('(2A8,A19,I5,I11,I15)')
         words=ff.read(words)
 
         self.code_name = words[0]
@@ -77,12 +77,14 @@ class Mctal(object):
         self.n_prn = int(words[6])
 
         # comment line of input file
-        self.comment = self.f.readline().strip()
-
+        # self.comment = self.f.readline().strip()
+        ff=FortranRecordReader('(1X,A79)')
+        words=self.f.readline()
+        self.comment= ff.read(words)
         # read tally line
         words = self.f.readline()
         # specify fortran format for tally line
-        ff=FortranRecordReader()
+        ff=FortranRecordReader('(A4,I6,1X,A5,I6)')
         words=ff.read(words)
         self.n_tallies = words[1]
         if len(words) > 2:
@@ -90,7 +92,9 @@ class Mctal(object):
             pass
 
         # read tally numbers
-        tally_nums = [int(i) for i in self.f.readline().split()]
+        ff=FortranRecordReader('(16I5)')
+        # ???????  
+        tally_nums = [int(i) for i in ff.read(self.f.readline())]
 
         # read tallies
         for i_tal in tally_nums:
