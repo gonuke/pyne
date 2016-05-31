@@ -70,37 +70,174 @@ class Mctal(object):
 
         self.code_name = words[0]
         self.code_version = words[1]
-        self.code_date = words[2]
-        self.code_time = words[3]
-        self.n_dump = words[4]
-        self.n_histories = int(words[5])
-        self.n_prn = int(words[6])
+        self.code_date_time = words[2]
+    
+        #self.code_time = words[3]
+        self.n_dump = words[3]
+        self.n_histories = int(words[4])
+        self.n_prn = int(words[5])
 
         # comment line of input file
         # self.comment = self.f.readline().strip()
-        ff=FortranRecordReader('(1X,A79)')
+        ff=FortranRecordReader('(1x,A79)')
         words=self.f.readline()
         self.comment= ff.read(words)
         # read tally line
         words = self.f.readline()
         # specify fortran format for tally line
-        ff=FortranRecordReader('(A4,I6,1X,A5,I6)')
+        ff=FortranRecordReader('(A4,I6,1x,A5,I6)')
         words=ff.read(words)
         self.n_tallies = words[1]
-        if len(words) > 2:
-            # perturbation tallies present
-            pass
-
+        try:
+          self.n_perts = words[4]
+        except IndexError:
+        # if not existing in mctal files,set it to default value 0
+          self.n_perts = 0
+        #???? pertubations ????
+        #if len(words) > 2:
+            # perturbation tallies ¸present
+        #   pass
+       
         # read tally numbers
-        ff=FortranRecordReader('(16I5)')
-        # ???????  
-        tally_nums = [int(i) for i in ff.read(self.f.readline())]
-
+        
+        if self.n_tallies!=0: 
+          num_lines_tally_num = self.n_tallies///16 + 1
+          ff = FortranRecordReader('(16I5)')
+          words = self.f.readline()
+          tally_nums=ff.read(words)
+          for i in range(1,num_lines_tally_num):
+             words = self.f.readline()
+             tally_nums = ff.read(words) + tally_nums
+          tally_nums = [item for item in tally_nums if item is not None]            
+        
         # read tallies
         for i_tal in tally_nums:
             pass
+    
+        words = self.f.readline()
+        ff = FortranRecordReader('(A5,3I5)')
+        tally = ff.read(words)
+        problem_name = tally[1] 
+        particle_type = tally[2]
+        tally_type = tally[3]
+        
+        words = self.f.readline()
+        if words.startswith(" "):
+           # read FC card lines
+           ff = FortranRecordReader('(5x,A75)')
+           FC_card_lines = ff.read(words)
+           words = self.f.readline()
+           while words.startswith(" "):
+              FC_card_lines = ff.read(words) + FC_card_lines
+              words = self.f.readline()
 
-        # read kcode information
+        # read f lines
+        ff = FortranRecordReader('(A2,I8)')
+        f = ff.read(words)
+        num_cell = f[1]       
+        words = self.f.readline()  
+        if tally_type != 1:
+           cell_nums = []
+           cell_nums.append(int(words))
+           for i in range(1,num_cell):
+               words = int(file.readline())
+               cell_nums.append(words)
+           words = self.f.readline()
+
+        # read d line
+        n = ff.read(words)
+        total_flagged_unflagged =n[1] 
+
+        # read user bins line
+        words = self.f.readline()
+        user_bins=ff.read(words)
+        user_bins_nums = user_bins[1]
+        
+        # read segment bins line
+        words = self.f.readline()
+        segment_bin = ff.read(words)
+        segment_bins_nums = segment_bin[1]
+        
+        # read multipiler bin line
+        words = self.f.readline()
+        multiplier_bin = ff.read(words)
+        multiplier_bins_nums = multiplier_bin[1]
+        
+        # read cosine line
+        words = self.f.readline()
+        ff = FortranRecordReader('(A2,I8,I4)')
+        cosine = ff.read(words)
+        cosine_bin_num = cosine[1]
+        intgr_flg = cosine[2]
+        if intgr_flg is None:
+           intgr_flg = 0 
+        
+        # read cosine values
+        if cosine_bin_num != 0:
+          cos_val_lines = cosine_bin_num//6+1
+          ff = FortranRecordReader('(1P6E13.5)')
+          words = self.f.readline()
+          cos_val = ff.read(words)
+          for i in range(1,cos_val_lines):
+              words = self.f.readline()
+              cos_val = cos_val + ff.read(words)
+          cos_val = [item for item in cos_val if item is not None]
+                                
+        # read energy bin line
+        words = self.f.readline()
+        ff = FortranRecordReader('(A2,I8,I4)')
+        energy_bin = ff.read(words)
+        energy_bin_num = energy_bin[1]
+        if energy_bin_num !=0:
+           energy_val_lines = energy_bin_num//6+1
+           ff = FortranRecordReader('(1P6E13.5)')
+           words = self.f.readline()
+           energy_val = ff.read(words)
+           for i in range(1,energy_val_lines):
+                words = self.f.readline()
+                energy_val = energy_val + ff.read(words)
+           energy_val = [item for item in cos_val if item is not None] 
+        
+        # read time bin line
+        words = self.f.readline()
+        ff = FortranRecordReader('(A2,I8,I4)')
+        time_bin = ff.read(words)
+        time_bin_num = time_bin[1]
+        if time_bin_num != 0:
+           time_val_lines = time_bin_num//6+1
+           ff = FortranRecordReader('(1P6E13.5)')
+           words = self.f.readline()
+           time_val = ff.read(words)
+           for i in range(1,time_val_lines):
+                words = self.f.readline()
+                time_val = time_val + ff.read(words)
+           time_val = [item for item in time_val if item is not None]
+        
+        # read VALS
+        self.f.readline()
+        words = self.f.readline()
+        ff = FortranRecordReader('(4(1PE13.5,0PF7.4))')
+        vals = ff.read(words)
+        words = self.f.readline()
+        while words.stratswith(" "):  
+              vals = ff.read(words) + vals
+              words = self.f.readline()
+
+
+        # read TFC lines
+        ff = FortranRecordReader('(A3,I5,8I8)')
+        tfc = ff.read(words)
+        tally_fluc_set_num = tfc[1]
+        tally_fluc = []
+        words = self.f.readline()
+        ff = FortranRecordReader('(I11,1P3E13.5)')
+        tally_fluc.append(ff.read(words))
+        if tally_fluc_set_num != 0:
+           for i in range(1,tally_fluc_set_num):
+               words = self.f.readline()
+               tally_fluc.append(words)
+        
+        
         # specify fortran format for kcode info
         words = self.f.readline()
         ff=FortranRecordReader()
