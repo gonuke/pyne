@@ -54,16 +54,10 @@ class Mctal(object):
 
         # read tally numbers
 
-        if self.n_tallies!=0:
-          num_lines_tally_num = math.ceil(self.n_tallies/16)
+        num_lines_tally_num = math.ceil(self.n_tallies/16)
+        if num_lines_tally_num != 0:
           ff = FortranRecordReader('(16I5)')
-          words = self.f.readline()
-          tally_nums=ff.read(words)
-          
-          for i in range(1,num_lines_tally_num):
-             words = self.f.readline()
-             tally_nums = ff.read(words) + tally_nums
-          tally_nums = [item for item in tally_nums if item is not None]
+          tally_nums = routine_read_info(self,self.f,ff,num_lines_tally_num)
         # read tallies
         for i_tal in tally_nums:
             pass
@@ -94,15 +88,8 @@ class Mctal(object):
             num_cell = f[1]
             if num_cell != 0 and tally_type != 1:
                cell_num_lines = math.ceil(num_cell/11) 
-               words = self.f.readline()
                ff = FortranRecordReader('(11I7)')
-               cell_nums = ff.read(words)
-           
-               for i in range(1,cell_num_lines):
-                  words = self.f.readline()
-                  cell_nums = cell_nums + words
-           
-               cell_nums = [item for item in cell_nums if item is not None]
+               cell_nums = routine_read_info(self,self.f,ff,cell_num_lines)
             words = self.f.readline()
             # read d line
             ff = FortranRecordReader('(A2,I8)')
@@ -129,14 +116,9 @@ class Mctal(object):
             cos = ff.read(words)
             cosine_bin_num = cos[1]
             if cosine_bin_num != 0:
-               cos_val_lines = cosine_bin_num//6+1
+               cos_val_lines = math.ceil(cosine_bin_num/6)
                ff = FortranRecordReader('(1P6E13.5)')
-               words = self.f.readline()
-               cos_val = ff.read(words)
-               for i in range(1,cos_val_lines):
-                   words = self.f.readline()
-                   cos_val = cos_val + ff.read(words)
-               cos_val = [item for item in cos_val if item is not None]
+               cos_val = routine_read_info(self,self.f,ff,cos_val_lines)
 
             # read energy bin line
             words = self.f.readline()
@@ -146,13 +128,7 @@ class Mctal(object):
             if energy_bin_num !=0:
                energy_val_lines = math.ceil(energy_bin_num/6)
                ff = FortranRecordReader('(1P6E13.5)')
-               words = self.f.readline()
-               energy_val = ff.read(words)
-               for i in range(1,energy_val_lines):
-                   words = self.f.readline()
-                   energy_val = energy_val + ff.read(words)
-
-               energy_val = [item for item in energy_val if item is not None]
+               energy_val = routine_read_info(self,self.f,ff,energy_val_lines)
             # read time bin line
             words = self.f.readline()
             ff = FortranRecordReader('(A2,I8,I4)')
@@ -161,12 +137,7 @@ class Mctal(object):
             if time_bin_num != 0:
                 time_val_lines = math.ceil(time_bin_num/6)
                 ff = FortranRecordReader('(1P6E13.5)')
-                words = self.f.readline()
-                time_val = ff.read(words)
-                for i in range(1,time_val_lines):
-                    words = self.f.readline()
-                    time_val = time_val + ff.read(words)
-                time_val = [item for item in time_val if item is not None]
+                time_val = routine_read_info(self,self.f,ff,time_val_lines)
             # read VALS
             self.f.readline()
             words = self.f.readline()
@@ -178,17 +149,21 @@ class Mctal(object):
                 words = self.f.readline()
         
             vals = [val for val in vals if val is not None]
+            print(vals)
             # read TFC lines
             ff = FortranRecordReader('(A3,I5,8I8)')
             tfc = ff.read(words)
             tally_fluc_set_num = tfc[1]
-            words = self.f.readline()
-            ff = FortranRecordReader('(I11,1P3E13.5)')
-            tally_fluc = ff.read(words)
             if tally_fluc_set_num != 0:
-                for i in range(1,tally_fluc_set_num):
-                    words = self.f.readline()
-                    tally_fluc = tally_fluc + ff.read(words)
-
-                tally_fluc = [item for item in tally_fluc if item is not None]
-
+               ff = FortranRecordReader('(I11,1P3E13.5)')
+               tally_fluc = routine_read_info(self,self.f,ff,tally_fluc_set_num) 
+               
+               print(tally_fluc)
+           
+def routine_read_info(self,file,ff,num_lines):
+            info = []
+            for i in range(num_lines):
+                  words = file.readline()
+                  info = info + ff.read(words)
+            info = [item for item in info if item is not None]
+            return info
