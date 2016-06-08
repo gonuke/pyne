@@ -95,13 +95,12 @@ class Mctal(object):
           self.n_perts = 0
         #???? pertubations ????
         #if len(words) > 2:
-            # perturbation tallies ¸present
         #   pass
        
         # read tally numbers
         
         if self.n_tallies!=0: 
-          num_lines_tally_num = self.n_tallies///16 + 1
+          num_lines_tally_num = self.n_tallies  # ///16 + 1
           ff = FortranRecordReader('(16I5)')
           words = self.f.readline()
           tally_nums=ff.read(words)
