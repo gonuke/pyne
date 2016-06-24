@@ -70,15 +70,17 @@ class Mctal(object):
         self.mctal['comment'] = [item for item in comment if item is not None]
         print(self.mctal['comment'])
 
-        # read number of tallies line
+        # read number of tallies and perturbations line
         words = self.f.readline()
         self.mctal['number_tally'] = read_line(words,'(A4,I6,1x,A5,I6)')
         n_tallies = self.mctal['number_tally'][1]
+	n_perturbations = self.mctal['number_tally'][3]
         print(self.mctal['number_tally'])
 
         # read the list of the tally numbers
         num_lines_tally_num = math.ceil(n_tallies/16)
-        if num_lines_tally_num != 0:
+        print (num_lines_tally_num)
+	if num_lines_tally_num != 0:
             self.mctal['tally_list'] = routine_read_info(self.f,'(16I5)',num_lines_tally_num)
         
         print(self.mctal['tally_list'])
@@ -109,8 +111,8 @@ class Mctal(object):
 class Tally(object):
     def __init__(self):
         pass
-    def read(self, filename):  
-        
+
+    def read(self, filename):          
         self.f = open(filename, 'r')
         while (self.f.readline().split()[0]!='tally'):
             word = self.f.readline()
