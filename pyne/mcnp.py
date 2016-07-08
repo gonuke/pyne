@@ -76,7 +76,7 @@ class Mctal(object):
         n_tallies = self.mctal['number_tally'][1]
 	n_perturbations = self.mctal['number_tally'][3]
         print(self.mctal['number_tally'])
-
+        
         # read the list of the tally numbers
         num_lines_tally_num = math.ceil(n_tallies/16)
         print (num_lines_tally_num)
@@ -84,7 +84,9 @@ class Mctal(object):
             self.mctal['tally_list'] = routine_read_info(self.f,'(16I5)',num_lines_tally_num)
         
         print(self.mctal['tally_list'])
-        
+        #self.mctal['tally' + self.mctal['tally_list'][0]]
+   
+        tally.read(filename,n_tallies)
         # create tally object
         #tally = Tally()
             
@@ -112,63 +114,76 @@ class Tally(object):
     def __init__(self):
         pass
 
-    def read(self, filename):          
+    def read(self, filename,n_tallies):          
         self.f = open(filename, 'r')
-        while (self.f.readline().split()[0]!='tally'):
+        word = self.f.readline()
+        while (word.split()[0]!='tally'):
             word = self.f.readline()
         
-        print(word)
-        words = self.f.readline()
-        print(words)
+            
+           
+        #print(word)
+        #words = self.f.readline()
+        #print(words)
         for num in range(n_tallies):
            # ff = FortranRecordReader('(A5,3I5)')
+            #words = self.f.readline()
+            #print(word)
+                
+            self.tally['tally_info'] = read_line(word,'(A5,3I5)')
+            #print(self.tally['tally_info'])
+            #words = ff.read(word)
+            #problem_name = words[1]
+            #particle_type = words[2]
+            tally_type = self.tally['tally_info'][3]
+           
+            #print(tally_type)
             words = self.f.readline()
-            self.mctal['tally_info'] = read_line(words,'(A5,3I5)')
-
-            words = ff.read(words)
-            problem_name = words[1]
-            particle_type = words[2]
-            tally_type = words[3]
-
-            print(tally_type)
-            words = self.f.readline()
+            print(words)
             if words.startswith(" "):
             # read FC card lines
                ff = FortranRecordReader('(5x,A75)')
-               self.FC_card_lines = ff.read(words)
+               FC_card_lines = ff.read(words) 
                words = self.f.readline()
                while words.startswith(" "):
-                  self.FC_card_lines = ff.read(words) + self.FC_card_lines
+                  FC_card_lines = ff.read(words) + FC_card_lines
                   words = self.f.readline()
+               print(FC_card_lines)
+               self.tally['FC_card_lines'] = FC_card_lines
 
             # read f lines
             ff = FortranRecordReader('(A2,I8)')
+            #print(words)
             f = ff.read(words)
             num_cell = f[1]
+            print(num_cell)
             if num_cell != 0 and tally_type != 1:
                cell_num_lines = math.ceil(num_cell/11)
-               ff = FortranRecordReader('(11I7)')
-               cell_nums = routine_read_info(self,self.f,ff,cell_num_lines)
+               #ff = FortranRecordReader('(11I7)')
+               cell_nums = routine_read_info(self.f,'(11I7)',cell_num_lines)
+         
+            self.tally['cell_number_list'] = cell_nums
             words = self.f.readline()
+            print(self.tally['cell_number_list'])
             # read d line
             ff = FortranRecordReader('(A2,I8)')
             n = ff.read(words)
-            total_flagged_unflagged =n[1]
-
+      
+            self.tally['total_flagged_unflagged'] = n[1]
             # rea d user bins line
             words = self.f.readline()
             user_bins=ff.read(words)
-            user_bins_nums = user_bins[1]
-
+            self.tally['user_bins_numbers']=user_bins[1]
+            
             # read segment bins line
             words = self.f.readline()
             segment_bin = ff.read(words)
-            segment_bins_nums = segment_bin[1]
+            self.tally['segment_bin'] = segment_bin[1]
 
             # read multipiler bin line
             words = self.f.readline()
             multiplier_bin = ff.read(words)
-            multiplier_bins_nums = multiplier_bin[1]
+            self.tally['multiplier_bin'] = multiplier_bin[1]
             # read cosine values
             words = self.f.readline()
             ff = FortranRecordReader('(A2,I8,I4)')
@@ -176,9 +191,10 @@ class Tally(object):
             cosine_bin_num = cos[1]
             if cosine_bin_num != 0:
                cos_val_lines = math.ceil(cosine_bin_num/6)
-               ff = FortranRecordReader('(1P6E13.5)')
-               cos_val = routine_read_info(self,self.f,ff,cos_val_lines)
-
+               #ff = FortranRecordReader('(1P6E13.5)')
+               cos_val = routine_read_info(self.f,'(1p6E13.5)',cos_val_lines)
+               self.tally['cosine_values_list'] = cos_val
+               print(self.tally['cosine_values_list'])
             # read energy bin line
             words = self.f.readline()
             ff = FortranRecordReader('(A2,I8,I4)')
@@ -186,8 +202,10 @@ class Tally(object):
             energy_bin_num = energy_bin[1]
             if energy_bin_num !=0:
                energy_val_lines = math.ceil(energy_bin_num/6)
-               ff = FortranRecordReader('(1P6E13.5)')
-               energy_val = routine_read_info(self,self.f,ff,energy_val_lines)
+               #ff = FortranRecordReader('(1P6E13.5)')
+               energy_val = routine_read_info(self.f,'(1P6E13.5)',energy_val_lines)
+               self.tally['energy_values_list'] = energy_val
+               print(self.tally['energy_values_list'])
             # read time bin line
             words = self.f.readline()
             ff = FortranRecordReader('(A2,I8,I4)')
@@ -195,8 +213,10 @@ class Tally(object):
             time_bin_num = time_bin[1]
             if time_bin_num != 0:
                 time_val_lines = math.ceil(time_bin_num/6)
-                ff = FortranRecordReader('(1P6E13.5)')
-                time_val = routine_read_info(self,self.f,ff,time_val_lines)
+                #ff = FortranRecordReader('(1P6E13.5)')
+                time_val = routine_read_info(self.f,'(1P6E13.5)',time_val_lines)
+                self.tally['time_values_list'] = time_val
+                print(self.tally['time_values_list'])
             # read VALS
             self.f.readline()
             words = self.f.readline()
@@ -208,17 +228,24 @@ class Tally(object):
                 words = self.f.readline()
 
             vals = [val for val in vals if val is not None]
-         
+            self.tally['tally_data_pairs'] = vals
+            print(self.tally['tally_data_pairs'])
             # read TFC lines
             ff = FortranRecordReader('(A3,I5,8I8)')
             tfc = ff.read(words)
             tally_fluc_set_num = tfc[1]
+            print(tally_fluc_set_num)
             if tally_fluc_set_num != 0:
-               ff = FortranRecordReader('(I11,1P3E13.5)')
-               tally_fluc = routine_read_info(self,self.f,ff,tally_fluc_set_num)
-
-         
+               #ff = FortranRecordReader('(I11,1P3E13.5)')
+               tally_fluc = routine_read_info(self.f,'(I11,1P3E13.5)',tally_fluc_set_num)
+               self.tally['TFC_list'] = tally_fluc   
+               print(self.tally['TFC_list'])
+            word = self.f.readline()
+#class kcode(object):
+        #def __init__(self):
+            #pass
         # specify fortran format for kcode info
+        #def read(self,filename):
         words = self.f.readline()
         ff=FortranRecordReader()
         words=ff.read(words)
