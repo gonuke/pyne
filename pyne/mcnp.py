@@ -85,7 +85,7 @@ class Mctal(object):
         
         print(self.mctal['tally_list'])
         #self.mctal['tally' + self.mctal['tally_list'][0]]
-   
+	tally = Tally()
         tally.read(filename,n_tallies)
         # create tally object
         #tally = Tally()
@@ -114,32 +114,25 @@ class Tally(object):
     def __init__(self):
         pass
 
-    def read(self, filename,n_tallies):          
+    def read(self, filename,n_tallies):
+	self.tally = {}          
         self.f = open(filename, 'r')
         word = self.f.readline()
         while (word.split()[0]!='tally'):
-            word = self.f.readline()
-        
+            word = self.f.readline()        
+	self.tally['TALLY'] = read_line(word,'(A5,3I5)')
+        print(self.tally['TALLY'])
+        problem_name = self.tally['TALLY'][1]
+        particle_type = self.tally['TALLY'][2]
+        tally_type = self.tally['TALLY'][3]
+        if int(particle_type) < 0:
+            words = self.f.readline()
+            self.tally['m_partticle_type'] = read_line(word,'(40I2)')
             
            
-        #print(word)
-        #words = self.f.readline()
-        #print(words)
-        for num in range(n_tallies):
-           # ff = FortranRecordReader('(A5,3I5)')
-            #words = self.f.readline()
-            #print(word)
                 
-            self.tally['tally_info'] = read_line(word,'(A5,3I5)')
-            #print(self.tally['tally_info'])
-            #words = ff.read(word)
-            #problem_name = words[1]
-            #particle_type = words[2]
-            tally_type = self.tally['tally_info'][3]
            
-            #print(tally_type)
             words = self.f.readline()
-            print(words)
             if words.startswith(" "):
             # read FC card lines
                ff = FortranRecordReader('(5x,A75)')
@@ -241,11 +234,11 @@ class Tally(object):
                self.tally['TFC_list'] = tally_fluc   
                print(self.tally['TFC_list'])
             word = self.f.readline()
-#class kcode(object):
-        #def __init__(self):
-            #pass
-        # specify fortran format for kcode info
-        #def read(self,filename):
+class kcode(object):
+    def __init__(self):
+	pass
+        #specify fortran format for kcode info
+    def read(self,filename):
         words = self.f.readline()
         ff=FortranRecordReader()
         words=ff.read(words)
@@ -323,22 +316,6 @@ def routine_read_info(file,ffs,num_lines):
 
 
 #    """Parses a 'mctal' tally output file from MCNP. Currently this
-#        only supports reading the kcode data- the remaining tally data
-#        will not be read.
-#
-#        # open file
-#        self.f = open(filename, 'r')
-#
-#        # get code name, version, date/time, etc
-#        # using fortran format
-#        
-#        words = self.f.readline()
-#        # specify fortran format for code name, version,date/time, etc
-#        ff=FortranRecordReader('(2A8,A19,I5,I11,I15)')
-#        words=ff.read(words)
-#
-#        self.code_name = words[0]
-#        self.code_version = words[1]
 #        self.code_date_time = words[2]
 #    
 #        #self.code_time = words[3]
