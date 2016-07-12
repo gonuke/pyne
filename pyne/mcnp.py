@@ -87,6 +87,8 @@ class Mctal(object):
         #self.mctal['tally' + self.mctal['tally_list'][0]]
 	tally = Tally()
         tally.read(filename,n_tallies)
+        kcode = Kcode()
+        kcode.read(filename)
         # create tally object
         #tally = Tally()
             
@@ -140,7 +142,7 @@ class Tally(object):
                FC_card_lines = ff.read(words) 
                words = self.f.readline()
                while words.startswith(" "):
-                  FC_card_lines = ff.read(words) + FC_card_lines
+                  FC_card_lines = FC_card_lines + ff.read(words) 
                   words = self.f.readline()
                #print(FC_card_lines)
                self.tally['FC_card_lines'] = FC_card_lines
@@ -218,7 +220,7 @@ class Tally(object):
           vals = ff.read(words)
           words = self.f.readline()
           while words.startswith(" "):
-                vals = ff.read(words) + vals
+                vals = vals + ff.read(words)
                 words = self.f.readline()
 
           vals = [val for val in vals if val is not None]
@@ -238,19 +240,26 @@ class Tally(object):
           self.tally_dic['TALLY'+str(num)] = self.tally
 
         print(self.tally_dic['TALLY2'])
-
-class kcode(object):
+        print(self.tally_dic['TALLY1'])
+class Kcode(object):
     def __init__(self):
 	pass
         #specify fortran format for kcode info
     def read(self,filename):
-        words = self.f.readline()
-        ff=FortranRecordReader()
-        words=ff.read(words)
-        self.n_cycles = int(words[1])
-        self.n_inactive = int(words[2])
-        vars_per_cycle = int(words[3])
-
+        self.f = open(filename, 'r')
+        word = self.f.readline()
+        while (word.split()[0]!='kcode'):
+            word = self.f.readline()
+        self.kcode = {}
+        print(word)
+        #words = self.f.readline()
+        ff=FortranRecordReader('(A5,3I5)')
+        words=ff.read(word)
+        
+        self.n_cycles = words[1]
+        self.n_inactive = words[2]
+        vars_per_cycle = words[3]
+        
         self.k_col = []
         self.k_abs = []
         self.k_path = []
@@ -268,9 +277,15 @@ class kcode(object):
         for cycle in range(self.n_cycles):
             # read keff and prompt neutron lifetimes
             if vars_per_cycle == 0 or vars_per_cycle == 5:
-                values = [float(i) for i in get_words(self.f, lines=1)]
+                num_lines = 1
+                values = routine_read_info(self.f,'(5F12.6)',num_lines)
+                #values = [float(i) for i in get_words(self.f, lines=1)]
             elif vars_per_cycle == 19:
-                values = [float(i) for i in get_words(self.f, lines=4)]
+                num_lines = 4
+                values = routine_read_info(self.f,'(5F12.6)',num_lines)
+
+                #values = [float(i) for i in get_words(self.f, lines=4)]
+            #print(values)
 
             self.k_col.append(values[0])
             self.k_abs.append(values[1])
@@ -296,7 +311,19 @@ class kcode(object):
             self.cycle_histories.append(values[17])
             self.avg_k_combined_FOM.append(values[18])
 
-
+        self.kcode['k_col'] = self.k_col
+        self.kcode['k_abs'] = self.k_abs
+        self.kcode['k_path']= self.k_path
+        self.kcode['prompt_life_col']=self.prompt_life_col
+        self.kcode['prompt_life_path']=self.prompt_life_path
+        self.kcode['avg_k_col']=self.avg_k_col
+        self.kcode['avg_k_abs']=self.avg_k_abs
+        self.kcode['avg_k_path']=self.avg_k_path
+        self.kcode['avg_k_combined']=self.avg_k_combined
+        self.kcode['avg_k_combined_active'] = self.avg_k_combined_active
+        self.kcode['prompt_life_combined']=self.prompt_life_combined
+        self.kcode['avg_k_combined_FOM']=self.avg_k_combined_FOM
+        print(self.kcode['k_col'])
 
 
 def read_line(line,ffs):
