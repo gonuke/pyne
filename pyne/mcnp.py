@@ -318,6 +318,7 @@ class Kcode(object):
         self.kcode['prompt_life_path']=self.prompt_life_path
         self.kcode['avg_k_col']=self.avg_k_col
         self.kcode['avg_k_abs']=self.avg_k_abs
+
         self.kcode['avg_k_path']=self.avg_k_path
         self.kcode['avg_k_combined']=self.avg_k_combined
         self.kcode['avg_k_combined_active'] = self.avg_k_combined_active
