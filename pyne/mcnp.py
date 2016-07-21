@@ -90,32 +90,32 @@ class Mctal(object):
         
 	# create tally objects 
 	tally = Tally()
-        tally.read(filename,n_tallies)
+        tally.read(self.f,n_tallies)
 
 	# create kcode object
         kcode = Kcode()
-        kcode.read(filename)
+        kcode.read(self.f)
             
 class Tally(object):
     def __init__(self):
         pass
 
-    def read(self, filename,n_tallies):
+    def read(self,filename,n_tallies):
 	"""Parses tally information from a 'mctal' tally output from MCNP"""
 
 	# open file       
-        self.f = open(filename, 'r')
+        #self.f = open(filename, 'r')
 	
 	# read line 
-        word = self.f.readline()
+        word = filename.readline()
 
 	# find tally iformation  
         while (word.split()[0]!='tally'):
-            word = self.f.readline()
+            word = filename.readline()
 
 	# create a tally dictionary
         self.tally_dic = {}
-
+      
 	# read the tally info if there is any 
         for num in range(1,n_tallies+1):
 	    # tally dictionary
@@ -129,25 +129,25 @@ class Tally(object):
 
 	    # condition on particle type if negative then multiple particles used
             if int(particle_type) < 0:
-		words = self.f.readline()
+		words = filename.readline()
 		self.tally['m_partticle_type'] = read_line(word,'(40I2)')
 
             #read FC card line 
-	    words = self.f.readline()
+	    words = filename.readline()
             if words.startswith(" "):
 		#ff = FortranRecordReader('(5x,A75)')
 		#FC_card_lines = ff.read(words) 
 		FC_card_lines = read_line(words,'(5x,A75)')
-		words = self.f.readline()
+		words = filename.readline()
 		while words.startswith(" "):
 		    FC_card_lines = FC_card_lines + ff.read(words) 
-		    words = self.f.readline()
+		    words = filename.readline()
                 self.tally['FC_card_lines'] = FC_card_lines
-		print(self.tally['FC_card_lines'])
+
 	    # read f lines
 	    f = read_line(words,'(A2,I8)')
 	    #ff = FortranRecordReader('(A2,I8)')
-	    print(f)
+	 
 
 	    #f = ff.read(words)
             num_cell = f[1]
@@ -155,9 +155,9 @@ class Tally(object):
             if num_cell != 0 and tally_type != 1:
 		cell_num_lines = math.ceil(num_cell/11)
                 #ff = FortranRecordReader('(11I7)')
-                cell_nums = routine_read_info(self.f,'(11I7)',cell_num_lines)
+                cell_nums = routine_read_info(filename,'(11I7)',cell_num_lines)
                 self.tally['cell_number_list'] = cell_nums
-            words = self.f.readline()
+            words = filename.readline()
             #print(self.tally['cell_number_list'])
             # read d line
             ff = FortranRecordReader('(A2,I8)')
@@ -165,62 +165,62 @@ class Tally(object):
       
             self.tally['total_flagged_unflagged'] = n[1]
             # read user bins line
-            words = self.f.readline()
+            words = filename.readline()
             user_bins=ff.read(words)
             self.tally['user_bins_numbers']=user_bins[1]
             
             # read segment bins line
-            words = self.f.readline()
+            words = filename.readline()
             segment_bin = ff.read(words)
             self.tally['segment_bin'] = segment_bin[1]
 
             # read multipiler bin line
-            words = self.f.readline()
+            words = filename.readline()
             multiplier_bin = ff.read(words)
             self.tally['multiplier_bin'] = multiplier_bin[1]
           
             # read cosine values
-            words = self.f.readline()
+            words = filename.readline()
             ff = FortranRecordReader('(A2,I8,I4)')
             cos = ff.read(words)
             cosine_bin_num = cos[1]
             if cosine_bin_num != 0:
                 cos_val_lines = math.ceil(cosine_bin_num/6)
                 #ff = FortranRecordReader('(1P6E13.5)')
-                cos_val = routine_read_info(self.f,'(1p6E13.5)',cos_val_lines)
+                cos_val = routine_read_info(filename,'(1p6E13.5)',cos_val_lines)
                 self.tally['cosine_values_list'] = cos_val
                 #print(self.tally['cosine_values_list'])
             # read energy bin line
-            words = self.f.readline()
+            words = filename.readline()
             ff = FortranRecordReader('(A2,I8,I4)')
             energy_bin = ff.read(words)
             energy_bin_num = energy_bin[1]
             if energy_bin_num !=0:
                 energy_val_lines = math.ceil(energy_bin_num/6)
                 #ff = FortranRecordReader('(1P6E13.5)')
-                energy_val = routine_read_info(self.f,'(1P6E13.5)',energy_val_lines)
+                energy_val = routine_read_info(filename,'(1P6E13.5)',energy_val_lines)
                 self.tally['energy_values_list'] = energy_val
                 #print(self.tally['energy_values_list'])
            # read time bin line
-            words = self.f.readline()
+            words = filename.readline()
             ff = FortranRecordReader('(A2,I8,I4)')
             time_bin = ff.read(words)
             time_bin_num = time_bin[1]
             if time_bin_num != 0:
                 time_val_lines = math.ceil(time_bin_num/6)
                 #ff = FortranRecordReader('(1P6E13.5)')
-                time_val = routine_read_info(self.f,'(1P6E13.5)',time_val_lines)
+                time_val = routine_read_info(filename,'(1P6E13.5)',time_val_lines)
                 self.tally['time_values_list'] = time_val
                 #print(self.tally['time_values_list'])
             # read VALS
-            self.f.readline()
-            words = self.f.readline()
+            filename.readline()
+            words = filename.readline()
             ff = FortranRecordReader('(4(1PE13.5,0PF7.4))')
             vals = ff.read(words)
-            words = self.f.readline()
+            words = filename.readline()
             while words.startswith(" "):
 		vals = vals + ff.read(words)
-                words = self.f.readline()
+                words = filename.readline()
 
             vals = [val for val in vals if val is not None]
             self.tally['tally_data_pairs'] = vals
@@ -229,29 +229,31 @@ class Tally(object):
             ff = FortranRecordReader('(A3,I5,8I8)')
             tfc = ff.read(words)
             tally_fluc_set_num = tfc[1]
-            #print(tally_fluc_set_num)
+            #print(tall:y_fluc_set_num)
             if tally_fluc_set_num != 0:
 		#ff = FortranRecordReader('(I11,1P3E13.5)')
-               	tally_fluc = routine_read_info(self.f,'(I11,1P3E13.5)',tally_fluc_set_num)
+               	tally_fluc = routine_read_info(filename,'(I11,1P3E13.5)',tally_fluc_set_num)
 		self.tally['TFC_list'] = tally_fluc   
                 #print(self.tally['TFC_list'])
-            word = self.f.readline()
             self.tally_dic['TALLY'+str(num)] = self.tally
+            if num != n_tallies:
+                word = filename.readline()
 
 	print(self.tally_dic['TALLY2'])
 	print(self.tally_dic['TALLY1'])
+        
 
 class Kcode(object):
     def __init__(self):
 	pass
         #specify fortran format for kcode info
     def read(self,filename):
-        self.f = open(filename, 'r')
-        word = self.f.readline()
+        #self.f = open(filename, 'r')
+        word = filename.readline()
         while (word.split()[0]!='kcode'):
-            word = self.f.readline()
+            word = filename.readline()
         self.kcode = {}
-        print(word)
+        #print(word)
         #words = self.f.readline()
         ff=FortranRecordReader('(A5,3I5)')
         words=ff.read(word)
@@ -278,11 +280,11 @@ class Kcode(object):
             # read keff and prompt neutron lifetimes
             if vars_per_cycle == 0 or vars_per_cycle == 5:
                 num_lines = 1
-                values = routine_read_info(self.f,'(5F12.6)',num_lines)
+                values = routine_read_info(filename,'(5F12.6)',num_lines)
                 #values = [float(i) for i in get_words(self.f, lines=1)]
             elif vars_per_cycle == 19:
                 num_lines = 4
-                values = routine_read_info(self.f,'(5F12.6)',num_lines)
+                values = routine_read_info(filename,'(5F12.6)',num_lines)
 
                 #values = [float(i) for i in get_words(self.f, lines=4)]
             #print(values)
