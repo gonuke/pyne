@@ -66,6 +66,8 @@ def build_docker(args):
     tag = build_name(args)
     tag_flag = ['-t', tag]
     docker_args = []
+    base_img_args = []
+
     if args.hdf5_version is not '':
         docker_args += ["--build-arg", "build_hdf5=" + args.hdf5_version]
     if args.moab:
@@ -89,8 +91,11 @@ def build_docker(args):
             print("Can only deal with python 2 or 3")
             return
 
+    if args.base_img:
+        base_img_args = ['--cache-from', args.base_img]
+
     rtn = subprocess.check_call(
-        ["docker",  "build"] + tag_flag + dockerfile + docker_args + ["."], shell=(os.name == 'nt'))
+        ["docker",  "build"] + base_img_args + tag_flag + dockerfile + docker_args + ["."], shell=(os.name == 'nt'))
 
     if args.push:
         rtn = subprocess.check_call(
@@ -142,6 +147,10 @@ def main():
     push = 'Push docker image on dockerhub'
     parser.add_argument('--push', '-p', '-push', help=push,
                         action='store_true', default=False)
+
+    base_img = 'Provide a base image to use for cache'
+    parser.add_argument('--base_img', '-b', help=base_img,
+                        default='')
 
     args = parser.parse_args()
 
