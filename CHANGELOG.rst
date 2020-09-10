@@ -7,13 +7,18 @@ pyne Change Log
 Next Version
 ====================
 
+** Maintenance **
 
+* Fixes for nuc_data_make
+   * new download location for KAERI data archive (#1333)
+   * do not try to download missing (super heavy) data from KAERI (#1333)
+   * update material_library writing interface (#1333)
 
 v0.7.1
 ====================
 
 **New Capabilities**
-   * Adding unordered_map like API to MaterialLibrary pointing directly to the nested unordered_map
+   * Adding unordered_map like API to MaterialLibrary pointing directly to the nested unordered_map (#1330)
 
 **Maintenance**
 
