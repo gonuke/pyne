@@ -40,6 +40,7 @@ RUN if [ "${py_version%.?}" -eq 3 ] ; \
             update-alternatives --install /usr/bin/python python /usr/bin/python3 10; \
             update-alternatives --install /usr/bin/pip pip /usr/bin/pip3 10; \
     fi;\
+    pip install --upgrade pip; \
     pip install --force-reinstall \
             sphinx \
             cloud_sptheme \
@@ -51,11 +52,12 @@ RUN if [ "${py_version%.?}" -eq 3 ] ; \
             nose \
             cython \
             future \
-            matplotlib \
-            tables \
+            "tables<3.7" \
             scipy \
             jinja2 \
-            progress
+            progress; \
+    pip install matplotlib 
+
 
 # make starting directory
 RUN mkdir -p $HOME/opt
