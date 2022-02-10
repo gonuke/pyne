@@ -19,6 +19,7 @@ RUN if [ "${py_version%.?}" -eq 3 ] ; \
             python${PY_SUFIX}-setuptools \
             python${PY_SUFIX}-pip \
             python${PY_SUFIX}-setuptools \
+            python${PY_SUFIX}-packaging \
             python${PY_SUFIX}-dev \
             libpython${PY_SUFIX}-dev \
             git \
