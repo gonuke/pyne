@@ -44,6 +44,7 @@ RUN if [ "${py_version%.?}" -eq 3 ] ; \
     pip install --upgrade pip; \
     pip install --force-reinstall \
             sphinx \
+            "setuptools<49" \
             cloud_sptheme \
             prettytable \
             sphinxcontrib_bibtex \
