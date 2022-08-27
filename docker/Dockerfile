@@ -1,4 +1,4 @@
-ARG uversion=20.04
+ARG uversion=20.04  # use Ubuntu v20.04 as default environment
 FROM ubuntu:${uversion} as base
 
 # Ubuntu Setup
@@ -53,20 +53,22 @@ RUN apt-get update \
 # make starting directory
 RUN mkdir -p $HOME/opt
 
+# Section to build MOAB based on build arguments
 FROM base as moab
 
-ARG build_moab="YES"
-ARG enable_pymoab="YES"
-ARG build_dagmc="YES"
+ARG build_moab="YES"      # Deafult: Build MOAB
+ARG enable_pymoab="YES"   # Default: Enable pymoab
+ARG build_dagmc="YES"     # Default: Build DAGMC
+ARG cpus=4                # Default: Usef 4 CPUs for build
+
 ENV INSTALL_PATH=$HOME/opt/moab
 
-# build MOAB
+# Note: MOAB will be built if either pymoab or DAGMC is enabled
 RUN if [ "$build_moab" = "YES" ] || [ "$enable_pymoab" = "YES" ] || [ "$build_dagmc" = "YES" ]; then \
         if [ "$enable_pymoab" = "YES" ] ; \
         then \ 
             export PYMOAB_FLAG="-DENABLE_PYMOAB=ON"; \
         fi \
-        && echo $PYMOAB_FLAG \
         && mkdir -p $INSTALL_PATH \
         && cd $INSTALL_PATH \
         && git clone --depth 1 --single-branch -b 5.4.0 https://bitbucket.org/fathomteam/moab \
@@ -81,7 +83,7 @@ RUN if [ "$build_moab" = "YES" ] || [ "$enable_pymoab" = "YES" ] || [ "$build_da
               -DBUILD_SHARED_LIBS=ON \
               -DENABLE_BLASLAPACK=OFF \
               -DENABLE_FORTRAN=OFF \
-        && make -j 3 \
+        && make -j ${cpus} \
         && make install \
         && cd ../.. \
         && rm -rf moab ; \
@@ -92,9 +94,11 @@ ENV LD_LIBRARY_PATH $HOME/opt/moab/lib:$LD_LIBRARY_PATH
 ENV LIBRARY_PATH $HOME/opt/moab/lib:$LIBRARY_PATH
 ENV PYTHONPATH=$HOME/opt/moab/lib/python3.8/site-packages/
 
+# Section to build DAGMC based on build arguments
 FROM moab as dagmc
 
-ARG build_dagmc="YES"
+ARG build_dagmc           # Default: Build DAGMC
+ARG cpus                  # Default: Usef 4 CPUs for build
 
 # build/install DAGMC
 ENV INSTALL_PATH=$HOME/opt/dagmc
@@ -113,7 +117,7 @@ RUN if [ "$build_dagmc" = "YES" ]; then \
                  -DBUILD_MAKE_WATERTIGHT=OFF \
                  -DBUILD_OVERLAP_CHECK=OFF \
                  -DBUILD_TESTS=OFF \
-        && make -j 3\
+        && make -j ${cpus} \
         && make install \
         && cd ../.. \
         && rm -rf DAGMC; \
@@ -122,7 +126,8 @@ RUN if [ "$build_dagmc" = "YES" ]; then \
 FROM dagmc as openmc
 
 # build/install OpenMC Python API
-ARG install_openmc="YES"
+ARG install_openmc="YES"   # Default: Build OpenMC
+
 ENV INSTALL_PATH=$HOME/opt/openmc
 RUN if [ "$install_openmc" = "YES" ]; then \
         mkdir -p ${INSTALL_PATH} \
@@ -133,9 +138,11 @@ RUN if [ "$install_openmc" = "YES" ]; then \
         && pip install . ; \
     fi
 
-FROM openmc AS pyne 
+FROM openmc AS pyne
 
-ARG build_pyne=YES
+ARG build_pyne="YES"      # Default: Build PyNE
+ARG cpus                  # Default: Usef 4 CPUs for build
+
 # Build/Install PyNE
 RUN if [ "$build_pyne" = "YES" ]; then \
         cd $HOME/opt \
@@ -143,7 +150,7 @@ RUN if [ "$build_pyne" = "YES" ]; then \
         && cd pyne \
         && python setup.py install --user \
                                     --moab $HOME/opt/moab --dagmc $HOME/opt/dagmc \
-                                    --clean -j 3; \
+                                    --clean -j ${cpus}; \
     fi
 ENV PATH $HOME/.local/bin:$PATH
 RUN if [ "$build_pyne" = "YES" ]; then \
